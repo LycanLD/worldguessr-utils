@@ -32,8 +32,8 @@
 
 ## Installation
 
-1. Install a userscript manager like [Tampermonkey](https://www.tampermonkey.net/) for your browser
-2. Click on the raw script file: [worldguessr-utils.user.js](https://raw.githubusercontent.com/LycanLD/worldguessr-utils/main/worldguessr-utils.user.js)
+1. Install a userscript manager like [Tampermonkey](https://www.tampermonkey.net/) or [Violentmonkey](https://violentmonkey.github.io/) for your browser
+2. Click on the raw script file: [worldguessr-utils.user.js](https://github.com/LycanLD/worldguessr-utils/raw/refs/heads/main/worldguessr_utils.user.js)
 3. Tampermonkey should automatically detect the userscript and prompt you to install
 4. Confirm the installation by clicking "Install"
 
