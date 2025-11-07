@@ -28,7 +28,7 @@
 - **Ad Blocking** - Remove distracting ads from your gameplay
 - **Auto-Detection** - Automatically detects new rounds and updates location
 - **Copy Coordinates** - One-click copying of location coordinates
-- **Anti-Detection** - Built-in mechanisms to avoid detection by the game
+- **Anti-Ban** - Built-in mechanisms to avoid detection by the game
 
 ## Installation
 
