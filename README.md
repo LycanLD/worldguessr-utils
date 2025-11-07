@@ -20,15 +20,13 @@
 
 ## Features
 
-- **Accurate Location Detection** - Precisely identifies your current location in WorldGuessr
-- **Built-in Map View** - Visual representation of your location with Google Maps integration
-- **Session History** - Keeps track of your last 10 locations for reference
-- **Multiple Themes** - Choose from Ocean, Forest, Sunset, or Dark themes
-- **Customizable Settings** - Tailor the experience to your preferences
+- **Accurate Cord Dectection** - Precisely fetches your current location in WorldGuessr
+- **Built-in Map View** - Google Map's integration to view your location directly in WorldGuessr page.
+- **Multiple Themes** - Choose from Ocean, Forest, Sunset, or Dark
 - **Ad Blocking** - Remove distracting ads from your gameplay
-- **Auto-Detection** - Automatically detects new rounds and updates location
-- **Copy Coordinates** - One-click copying of location coordinates
-- **Anti-Ban** - Built-in mechanisms to avoid detection by the game
+- **Auto-Detect** - Automatically detects new rounds and updates location
+- **Copy Coords** - Copying of location coordinates
+- **Anti-Ban** - Built-in system to avoid detection / escape ban by the game
 
 ## Installation
 
