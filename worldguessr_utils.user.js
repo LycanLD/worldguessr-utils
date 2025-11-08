@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Lyc4n's WorldGuessr Utils
 // @namespace    http://tampermonkey.net/
-// @version      4.1.2
+// @version      4.1.3
 // @description  A modern, updated and undetected WorldGuessr cheat!
 // @author       Lyc4nLĐ
 // @match        https://www.worldguessr.com/*
@@ -26,7 +26,8 @@
     let settings = {
         blockAds: true,
         autoOpenGUI: true,
-        theme: 'ocean'
+        theme: 'ocean',
+        trackingMethod: 'Lyc4nLD' // New setting for tracking method
     };
     let sessionHistory = [];
 
@@ -87,9 +88,10 @@
         return null;
     }
 
-    async function getLocationDetails(lat, lon) {
+    // Lyc4nLD method for getting location details
+    async function getLocationDetailsLyc4nLD(lat, lon) {
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`, { headers: { 'User-Agent': 'WorldGuessrCheatGUI/4.1.2' } });
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`, { headers: { 'User-Agent': 'WorldGuessrCheatGUI/4.1.3' } });
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
             const data = await response.json();
             const address = data.display_name || "Address not found.";
@@ -99,6 +101,41 @@
         } catch (error) {
             console.error("Error fetching details:", error);
             return { address: "Could not fetch address.", country: "Unknown", countryCode: "XX" };
+        }
+    }
+
+    // Omkar04 method for getting location details
+    async function getLocationDetailsOmkar04(lat, lon) {
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+            const data = await response.json();
+            const addr = data.address || {};
+
+            // Build clean string without empty commas
+            const parts = [];
+            if (addr.city || addr.town || addr.village) parts.push(addr.city || addr.town || addr.village);
+            if (addr.state) parts.push(addr.state);
+            if (addr.country) parts.push(addr.country);
+
+            const locationString = parts.join(", ") || data.display_name || "Unknown location";
+            const country = addr.country || "Unknown Country";
+            const countryCode = (addr.country_code || "XX").toUpperCase();
+
+            return {
+                address: locationString,
+                country,
+                countryCode,
+                // For Omkar04 method, we'll use the location string as both address and a simplified display
+                displayString: locationString
+            };
+        } catch (e) {
+            console.error("Reverse geocoding failed:", e);
+            return {
+                address: "Unknown location",
+                country: "Unknown",
+                countryCode: "XX",
+                displayString: "Unknown location"
+            };
         }
     }
 
@@ -138,17 +175,38 @@
         if (!loc) { showStatus("Could not determine location. Start a round first.", "error"); return; }
 
         showStatus("Fetching location details...", "loading");
-        const details = await getLocationDetails(loc.lat, loc.long);
+
+        // Use the selected tracking method
+        let details;
+        if (settings.trackingMethod === 'Omkar04') {
+            details = await getLocationDetailsOmkar04(loc.lat, loc.long);
+        } else {
+            // Default to Lyc4nLD method
+            details = await getLocationDetailsLyc4nLD(loc.lat, loc.long);
+        }
 
         const coordsEl = guiContainer.querySelector('#coords-display');
         const countryEl = guiContainer.querySelector('#country-display');
         const addressEl = guiContainer.querySelector('#address-display');
         const mapEmbed = guiContainer.querySelector('#map-embed');
+        const methodSelect = guiContainer.querySelector('#tracking-method');
+
+        // Update method selector if it exists
+        if (methodSelect) methodSelect.value = settings.trackingMethod;
 
         if (coordsEl) coordsEl.textContent = `${loc.lat.toFixed(6)}, ${loc.long.toFixed(6)}`;
-        if (countryEl) countryEl.innerHTML = `${getCountryFlag(details.countryCode)} ${details.country}`;
-        if (addressEl) addressEl.textContent = details.address;
-        if (mapEmbed) mapEmbed.src = `https://www.google.com/maps?q=${loc.lat},${loc.long}&z=18&output=embed`;
+
+        // Update UI based on the selected method
+        if (settings.trackingMethod === 'Omkar04') {
+            if (countryEl) countryEl.innerHTML = `${getCountryFlag(details.countryCode)} ${details.country}`;
+            if (addressEl) addressEl.textContent = details.displayString;
+            if (mapEmbed) mapEmbed.src = `https://www.google.com/maps?q=${loc.lat},${loc.long}&z=15&output=embed`;
+        } else {
+            // Lyc4nLD method
+            if (countryEl) countryEl.innerHTML = `${getCountryFlag(details.countryCode)} ${details.country}`;
+            if (addressEl) addressEl.textContent = details.address;
+            if (mapEmbed) mapEmbed.src = `https://www.google.com/maps?q=${loc.lat},${loc.long}&z=18&output=embed`;
+        }
 
         addToHistory(loc, details);
 
@@ -208,7 +266,7 @@
                 transform: scale(0.9) translateY(20px); opacity: 0;
             }
             #wg-cheat-gui.visible { display: flex; transform: scale(1) translateY(0); opacity: 1; }
-            #wg-cheat-gui.hidden { display: none; }
+            #wg-cheat-gui.hidden { display: none !important; visibility: hidden; }
 
             .gui-header {
                 background: var(--md-sys-color-primary); color: white; padding: 16px 20px;
@@ -340,6 +398,105 @@
                 color: white !important;
                 margin: 0; /* Remove margin to center properly */
             }
+
+            /* Material You Dropdown Styles */
+            .md-dropdown {
+                position: relative;
+                width: 100%;
+                margin-bottom: 8px;
+            }
+
+            .md-dropdown-trigger {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 12px 16px;
+                background: var(--md-sys-color-surface);
+                border: 1px solid rgba(0, 0, 0, 0.12);
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            }
+
+            .md-dropdown-trigger:hover {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            }
+
+            .md-dropdown-trigger.active {
+                border-color: var(--md-sys-color-primary);
+                box-shadow: 0 0 0 2px rgba(103, 80, 164, 0.2);
+            }
+
+            .md-dropdown-label {
+                font-size: 16px;
+                font-weight: 500;
+                color: var(--md-sys-color-on-surface);
+            }
+
+            .md-dropdown-icon {
+                color: var(--md-sys-color-on-surface);
+                transition: transform 0.2s ease;
+            }
+
+            .md-dropdown-trigger.active .md-dropdown-icon {
+                transform: rotate(180deg);
+            }
+
+            .md-dropdown-menu {
+                position: absolute;
+                top: calc(100% + 8px);
+                left: 0;
+                right: 0;
+                background: var(--md-sys-color-surface);
+                border-radius: 12px;
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+                z-index: 1000;
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(-10px);
+                transition: all 0.2s ease;
+                overflow: hidden;
+            }
+
+            .md-dropdown-menu.show {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+            }
+
+            .md-dropdown-option {
+                padding: 12px 16px;
+                cursor: pointer;
+                transition: background-color 0.2s ease;
+                display: flex;
+                align-items: center;
+            }
+
+            .md-dropdown-option:hover {
+                background-color: rgba(103, 80, 164, 0.08);
+            }
+
+            .md-dropdown-option.selected {
+                background-color: rgba(103, 80, 164, 0.12);
+                color: var(--md-sys-color-primary);
+                font-weight: 500;
+            }
+
+            .md-dropdown-option-icon {
+                margin-right: 12px;
+                color: var(--md-sys-color-primary);
+            }
+
+            .md-dropdown-option-text {
+                flex-grow: 1;
+            }
+
+            .md-dropdown-option-desc {
+                font-size: 12px;
+                color: ${settings.theme === 'dark' ? 'rgba(230, 225, 229, 0.6)' : 'rgba(0, 0, 0, 0.6)'};
+                margin-top: 2px;
+            }
         `;
         document.head.appendChild(style);
 
@@ -362,6 +519,31 @@
                 <button class="tab-button" data-tab="info">Info</button>
             </div>
             <div class="tab-content active" id="location-tab">
+                <div class="info-card">
+                    <h4>Method</h4>
+                    <div class="md-dropdown" id="tracking-method-dropdown">
+                        <div class="md-dropdown-trigger">
+                            <span class="md-dropdown-label">Lyc4nLD Method (More Accurate)</span>
+                            <span class="material-symbols-outlined md-dropdown-icon">expand_more</span>
+                        </div>
+                        <div class="md-dropdown-menu">
+                            <div class="md-dropdown-option selected" data-value="Lyc4nLD">
+                                <span class="material-symbols-outlined md-dropdown-option-icon">location_on</span>
+                                <div>
+                                    <div class="md-dropdown-option-text">Lyc4nLD Method</div>
+                                    <div class="md-dropdown-option-desc">More accurate location details</div>
+                                </div>
+                            </div>
+                            <div class="md-dropdown-option" data-value="Omkar04">
+                                <span class="material-symbols-outlined md-dropdown-option-icon">speed</span>
+                                <div>
+                                    <div class="md-dropdown-option-text">Omkar04 Method</div>
+                                    <div class="md-dropdown-option-desc">Faster location detection</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="info-card"><h4>Country</h4><p id="country-display">N/A</p></div>
                 <div class="info-card"><h4>Address</h4><p id="address-display">N/A</p></div>
                 <div class="info-card"><h4>Coordinates</h4><p id="coords-display">Lat: N/A, Lng: N/A</p></div>
@@ -386,7 +568,7 @@
                     </div>
                     <h4 style="text-align: center; margin-bottom: 16px;"><span class="material-symbols-outlined">info</span> About Lyc4n's WorldGuessr Utils</h4>
                     <div style="line-height: 1.6; font-size: 14px;">
-                        <p><strong>Version:</strong> 4.1.2</p>
+                        <p><strong>Version:</strong> 4.1.3</p>
                         <p><strong>Author:</strong> LycanLD (Lycan Đỗ)</p>
                         <p><strong>Description:</strong> A modern, updated and undetected WorldGuessr cheat ^w^!</p>
                         <p><strong>Features:</strong></p>
@@ -397,17 +579,25 @@
                             <li><span class="material-symbols-outlined">palette</span> Colour themes</li>
                             <li><span class="material-symbols-outlined">settings</span> Utility settings</li>
                             <li><span class="material-symbols-outlined">block</span> Ad blocking</li>
+                            <li><span class="material-symbols-outlined">compare_arrows</span> Multiple tracking methods</li>
+                            <li><span class="material-symbols-outlined">keyboard</span> Keyboard shortcuts</li>
                         </ul>
                         <p><strong>Usage Tips:</strong></p>
                         <ul style="margin: 8px 0; padding-left: 20px;">
                             <li>Click "See Location" to see your current location</li>
-                            <li>Use the History tab to review previous locations</li>
-                            <li>Customize the appearance in Settings tab</li>
+                            <li>Use History tab to review previous locations</li>
+                            <li>Customize appearance in Settings tab</li>
+                            <li>Try different tracking methods for varied results</li>
+                            <li>Press F1 to quickly hide/show GUI</li>
+                        </ul>
+                        <p><strong>Credits:</strong></p>
+                        <ul style="margin: 8px 0; padding-left: 20px;">
+                            <li><span class="material-symbols-outlined">emoji_events</span> Special thanks to <a href="https://greasyfork.org/en/scripts/548151-worldguessr-location-helper" target="_blank" style="color: var(--md-sys-color-primary);">Omkar04</a> for the new location fetching method</li>
                         </ul>
                     </div>
                 </div>
             </div>
-            <div class="gui-footer">Made by LycanLD | v4.1.2 | Made in Vietnam</div>
+            <div class="gui-footer">Made by LycanLD | v4.1.3 | Made in Vietnam</div>
         `;
         document.body.appendChild(guiContainer);
 
@@ -427,6 +617,73 @@
                 const content = guiContainer.querySelector(`#${tabName}-tab`);
                 if (content) content.classList.add('active');
             });
+        });
+
+        // Material You Dropdown functionality
+        const dropdownTrigger = guiContainer.querySelector('.md-dropdown-trigger');
+        const dropdownMenu = guiContainer.querySelector('.md-dropdown-menu');
+        const dropdownOptions = guiContainer.querySelectorAll('.md-dropdown-option');
+        const dropdownLabel = guiContainer.querySelector('.md-dropdown-label');
+
+        // Set initial state based on saved settings
+        if (settings.trackingMethod === 'Omkar04') {
+            dropdownLabel.textContent = 'Omkar04 Method (Faster)';
+            dropdownOptions.forEach(opt => {
+                if (opt.dataset.value === 'Omkar04') {
+                    opt.classList.add('selected');
+                } else {
+                    opt.classList.remove('selected');
+                }
+            });
+        }
+
+        // Toggle dropdown
+        dropdownTrigger.addEventListener('click', () => {
+            const isActive = dropdownTrigger.classList.contains('active');
+            if (isActive) {
+                dropdownTrigger.classList.remove('active');
+                dropdownMenu.classList.remove('show');
+            } else {
+                dropdownTrigger.classList.add('active');
+                dropdownMenu.classList.add('show');
+            }
+        });
+
+        // Handle option selection
+        dropdownOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const value = option.dataset.value;
+
+                // Update selected state
+                dropdownOptions.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+
+                // Update label
+                if (value === 'Omkar04') {
+                    dropdownLabel.textContent = 'Omkar04 Method (Faster)';
+                } else {
+                    dropdownLabel.textContent = 'Lyc4nLD Method (More Accurate)';
+                }
+
+                // Close dropdown
+                dropdownTrigger.classList.remove('active');
+                dropdownMenu.classList.remove('show');
+
+                // Update setting
+                settings.trackingMethod = value;
+                saveSettings();
+
+                // Refresh location with new method
+                updateLocationInGUI(false);
+            });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.md-dropdown')) {
+                dropdownTrigger.classList.remove('active');
+                dropdownMenu.classList.remove('show');
+            }
         });
 
         // Settings
@@ -462,10 +719,22 @@
         if (!guiContainer) return;
         if (guiContainer.classList.contains('visible')) {
             guiContainer.classList.remove('visible');
-            setTimeout(() => guiContainer.classList.add('hidden'), 400);
+            // Force hide with additional styles
+            guiContainer.style.display = 'none';
+            guiContainer.style.visibility = 'hidden';
+            guiContainer.style.opacity = '0';
+            setTimeout(() => {
+                guiContainer.classList.add('hidden');
+            }, 50);
         } else {
             guiContainer.classList.remove('hidden');
-            setTimeout(() => guiContainer.classList.add('visible'), 10);
+            // Force show with additional styles
+            guiContainer.style.display = 'flex';
+            guiContainer.style.visibility = 'visible';
+            guiContainer.style.opacity = '1';
+            setTimeout(() => {
+                guiContainer.classList.add('visible');
+            }, 50);
         }
     }
 
@@ -567,11 +836,21 @@
         createGUI();
         blockAdsIfEnabled();
         waitForIframeAndSetupObserver();
-        console.log("Lyc4n's WorldGuessrCheatGUI Loaded (v4.1.2)");
+
+        // Add keyboard shortcut for F1 key
+        document.addEventListener('keydown', (e) => {
+            // Check if F1 key is pressed
+            if (e.key === 'F1') {
+                e.preventDefault(); // Prevent default action
+                e.stopPropagation(); // Stop event from propagating
+                toggleGUI(); // Toggle GUI visibility
+            }
+        });
+
+        console.log("Lyc4n's WorldGuessrCheatGUI Loaded (v4.1.3)");
     }
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize);
     else initialize();
 
 })();
-
