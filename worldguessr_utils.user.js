@@ -89,7 +89,7 @@
 
     async function getLocationDetails(lat, lon) {
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`, { headers: { 'User-Agent': 'WorldGuessrCheatGUI/4.1.1' } });
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`, { headers: { 'User-Agent': 'WorldGuessrCheatGUI/4.1.2' } });
             if (!response.ok) throw new Error(`API error: ${response.statusText}`);
             const data = await response.json();
             const address = data.display_name || "Address not found.";
@@ -386,7 +386,7 @@
                     </div>
                     <h4 style="text-align: center; margin-bottom: 16px;"><span class="material-symbols-outlined">info</span> About Lyc4n's WorldGuessr Utils</h4>
                     <div style="line-height: 1.6; font-size: 14px;">
-                        <p><strong>Version:</strong> 4.1</p>
+                        <p><strong>Version:</strong> 4.1.2</p>
                         <p><strong>Author:</strong> LycanLD (Lycan Đỗ)</p>
                         <p><strong>Description:</strong> A modern, updated and undetected WorldGuessr cheat ^w^!</p>
                         <p><strong>Features:</strong></p>
@@ -407,7 +407,7 @@
                     </div>
                 </div>
             </div>
-            <div class="gui-footer">Made by LycanLD | v4.1 | Made in Vietnam</div>
+            <div class="gui-footer">Made by LycanLD | v4.1.2 | Made in Vietnam</div>
         `;
         document.body.appendChild(guiContainer);
 
@@ -567,10 +567,11 @@
         createGUI();
         blockAdsIfEnabled();
         waitForIframeAndSetupObserver();
-        console.log("Lyc4n's WorldGuessrCheatGUI Loaded (v4.1.1)");
+        console.log("Lyc4n's WorldGuessrCheatGUI Loaded (v4.1.2)");
     }
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize);
     else initialize();
 
 })();
+
