@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         Lyc4n's WorldGuessr Utils
 // @namespace    http://tampermonkey.net/
-// @version      4.1.1
+// @version      4.1.2
 // @description  A modern, updated and undetected WorldGuessr cheat!
 // @author       Lyc4nLĐ
 // @match        https://www.worldguessr.com/*
 // @icon         https://raw.githubusercontent.com/LycanLD/lycanld.github.io/refs/heads/main/icon.png
 // @grant        none
+// @downloadURL https://github.com/LycanLD/worldguessr-utils/raw/refs/heads/main/worldguessr_utils.user.js
+// @updateURL https://github.com/LycanLD/worldguessr-utils/raw/refs/heads/main/worldguessr_utils.user.js
 // ==/UserScript==
 
 (function() {
